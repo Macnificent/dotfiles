@@ -503,35 +503,35 @@ endfunction
 function! ToggleDone()
     let done = matchstr(getline('.'), '\[/\]')
     if !empty(done)
-        s/\[.*\]/[]/g
+        s/\[.*\]/[]/ge
     else
-        s/\[.*\]/[\/]/g
+        s/\[.*\]/[\/]/ge
     endif
 endfunction
 
 function! TogglePartial()
     let partial = matchstr(getline('.'), '\[&\]')
     if !empty(partial)
-        s/\[.*\]/[]/g
+        s/\[.*\]/[]/ge
     else
-        s/\[.*\]/[\&]/g
+        s/\[.*\]/[\&]/ge
     endif
 endfunction
 
 function! ToggleSkipped()
     let skipped = matchstr(getline('.'), '\[-\]')
     if !empty(skipped)
-        s/\[.*\]/[]/g
+        s/\[.*\]/[]/ge
     else
-        s/\[.*\]/[-]/g
+        s/\[.*\]/[-]/ge
     endif
 endfunction
 
 function! TogglePostponed()
     let postponed = matchstr(getline('.'), '\[>\]')
     if !empty(postponed)
-        s/\[.*\]/[]/g
+        s/\[.*\]/[]/ge
     else
-        s/\[.*\]/[>]/g
+        s/\[.*\]/[>]/ge
     endif
 endfunction
