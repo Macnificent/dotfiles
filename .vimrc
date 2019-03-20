@@ -57,7 +57,7 @@ nmap <leader>w :w!<cr>
 
 " :W sudo saves the file
 " (useful for handling the permission-denied error)
-command W w !sudo tee % > /dev/null
+command! W w !sudo tee % > /dev/null
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -447,7 +447,84 @@ if executable(s:clip)
     augroup END
 end
 
+" I'm mostly editing plain-text, so this is pretty useful for note-taking etc
 set foldmethod=indent
 set foldnestmax=10
 set nofoldenable
 set foldlevel=2
+
+" Edit vimr configuration file
+nnoremap <Leader>ve :e $MYVIMRC<CR><Esc>
+" " Reload vimr configuration file
+nnoremap <Leader>vr :source $MYVIMRC<CR><Esc>
+
+"set showcmd
+
+" https://stackoverflow.com/a/6271254
+function! GetVisualSelection()
+    let [line_start, column_start] = getpos("'<")[1:2]
+    let [line_end, column_end] = getpos("'>")[1:2]
+    let lines = getline(line_start, line_end)
+    if len(lines) == 0
+        return ''
+    endif
+    let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+    let lines[0] = lines[0][column_start - 1:]
+    return join(lines, "\n")
+endfunction
+
+" Helpers for note-taking and todos
+"
+" DONE      = /
+" PARTIAL   = &
+" SKIPPED   = -
+" POSTPONED = >
+"
+
+vmap <Leader>d :call ToggleDone()<CR><Esc>
+map <Leader>d :call ToggleDone()<CR><Esc>
+
+vmap <Leader>pa :call TogglePartial()<CR><Esc>
+map <Leader>pa :call TogglePartial()<CR><Esc>
+
+vmap <Leader>sp :call ToggleSkipped()<CR><Esc>
+map <Leader>sp :call ToggleSkipped()<CR><Esc>
+
+vmap <Leader>pd :call TogglePostponed()<CR><Esc>
+map <Leader>pd :call TogglePostponed()<CR><Esc>
+
+function! ToggleDone()
+    let done = matchstr(getline('.'), '\[/\]')
+    if !empty(done)
+        s/\[.*\]/[]/g
+    else
+        s/\[.*\]/[\/]/g
+    endif
+endfunction
+
+function! TogglePartial()
+    let partial = matchstr(getline('.'), '\[&\]')
+    if !empty(partial)
+        s/\[.*\]/[]/g
+    else
+        s/\[.*\]/[\&]/g
+    endif
+endfunction
+
+function! ToggleSkipped()
+    let skipped = matchstr(getline('.'), '\[-\]')
+    if !empty(skipped)
+        s/\[.*\]/[]/g
+    else
+        s/\[.*\]/[-]/g
+    endif
+endfunction
+
+function! TogglePostponed()
+    let postponed = matchstr(getline('.'), '\[>\]')
+    if !empty(postponed)
+        s/\[.*\]/[]/g
+    else
+        s/\[.*\]/[>]/g
+    endif
+endfunction
