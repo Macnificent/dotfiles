@@ -493,6 +493,13 @@ map <Leader>sp :call ToggleSkipped()<CR><Esc>
 vmap <Leader>pd :call TogglePostponed()<CR><Esc>
 map <Leader>pd :call TogglePostponed()<CR><Esc>
 
+vmap <Leader>to :call SetTodo()<CR><Esc>
+map <Leader>to :call SetTodo()<CR><Esc>
+
+function! SetTodo()
+    s/\[.*\]/[]/g
+endfunction
+
 function! ToggleDone()
     let done = matchstr(getline('.'), '\[/\]')
     if !empty(done)
