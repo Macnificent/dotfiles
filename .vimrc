@@ -497,7 +497,7 @@ vmap <Leader>to :call SetTodo()<CR><Esc>
 map <Leader>to :call SetTodo()<CR><Esc>
 
 function! SetTodo()
-    s/\[.*\]/[]/g
+    s/\[.*\]/[]/ge
 endfunction
 
 function! ToggleDone()

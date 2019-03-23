@@ -121,10 +121,11 @@ function prepend() { echo -e "$1$(cat $2)" > $2; }
 
 # Custom aliases
 alias mount_pcloud='sudo mount -t drvfs p: /mnt/p' 
-alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+alias conf='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
 # Exports
 export -f prepend
 
 # Need to set 256 color mode for vim themes to work
 export TERM=xterm-256color
+
