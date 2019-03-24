@@ -471,31 +471,41 @@ function! GetVisualSelection()
     return join(lines, "\n")
 endfunction
 
-" Helpers for note-taking and todos
-"
-" DONE      = /
-" PARTIAL   = &
-" SKIPPED   = -
-" POSTPONED = >
-"
+" ========================================================
+" Mappings and functions to simplify note-taking and todos
+" ========================================================
 
 " Quickly edit todos
 nnoremap <Leader>te :cd $TODODIR<CR>:e todo.txt<CR>ggzM2jzO
 
-vmap <Leader>d :call ToggleDone()<CR><Esc>
+" Quickly incr and decr counters, regardless of cursor position
+map <Leader><C-a> :call IncrementCounter()<CR><Esc>
+map <Leader><C-x> :call DecrementCounter()<CR><Esc>
+
+" Todo statuses:
+" Done      = /
+" Partial   = &
+" Skipped   = -
+" Postponed = >
+
 map <Leader>d :call ToggleDone()<CR><Esc>
-
-vmap <Leader>pa :call TogglePartial()<CR><Esc>
 map <Leader>pa :call TogglePartial()<CR><Esc>
-
-vmap <Leader>sp :call ToggleSkipped()<CR><Esc>
 map <Leader>sp :call ToggleSkipped()<CR><Esc>
-
-vmap <Leader>pd :call TogglePostponed()<CR><Esc>
 map <Leader>pd :call TogglePostponed()<CR><Esc>
-
-vmap <Leader>to :call SetTodo()<CR><Esc>
 map <Leader>to :call SetTodo()<CR><Esc>
+
+" Custom todo functions
+function! IncrementCounter()
+    mark `
+    s/\[\(\d\+\)\(.*\)\]/\="\[".(submatch(1)+1).submatch(2)."\]"/ge
+    normal ``
+endfunction
+
+function! DecrementCounter()
+    mark `
+    s/\[\(\d\+\)\(.*\)\]/\="\[".(submatch(1)-1).submatch(2)."\]"/ge
+    normal ``
+endfunction
 
 function! SetTodo()
     s/\[.*\]/[]/ge
