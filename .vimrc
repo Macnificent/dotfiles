@@ -471,6 +471,10 @@ function! GetVisualSelection()
     return join(lines, "\n")
 endfunction
 
+" Simpler tab navigation
+nnoremap <C-n> :tabprevious<CR>
+nnoremap <C-m> :tabnext<CR>
+
 " ========================================================
 " Mappings and functions to simplify note-taking and todos
 " ========================================================
