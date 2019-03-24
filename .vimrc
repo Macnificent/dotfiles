@@ -458,8 +458,6 @@ nnoremap <Leader>ve :e $MYVIMRC<CR><Esc>
 " " Reload vimr configuration file
 nnoremap <Leader>vr :source $MYVIMRC<CR><Esc>
 
-"set showcmd
-
 " https://stackoverflow.com/a/6271254
 function! GetVisualSelection()
     let [line_start, column_start] = getpos("'<")[1:2]
@@ -480,6 +478,9 @@ endfunction
 " SKIPPED   = -
 " POSTPONED = >
 "
+
+" Quickly edit todos
+nnoremap <Leader>te :cd $TODODIR<CR>:e todo.txt<CR>zM2jzO
 
 vmap <Leader>d :call ToggleDone()<CR><Esc>
 map <Leader>d :call ToggleDone()<CR><Esc>
