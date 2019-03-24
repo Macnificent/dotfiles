@@ -480,7 +480,7 @@ endfunction
 "
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODODIR<CR>:e todo.txt<CR>zM2jzO
+nnoremap <Leader>te :cd $TODODIR<CR>:e todo.txt<CR>ggzM2jzO
 
 vmap <Leader>d :call ToggleDone()<CR><Esc>
 map <Leader>d :call ToggleDone()<CR><Esc>
