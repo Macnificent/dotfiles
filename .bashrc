@@ -129,3 +129,5 @@ export -f prepend
 # Need to set 256 color mode for vim themes to work
 export TERM=xterm-256color
 
+# Default todo directory
+export TODODIR=/mnt/d/notes/todo
