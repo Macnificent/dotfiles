@@ -476,7 +476,7 @@ endfunction
 " ========================================================
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODODIR<CR>:e todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODODIR<CR>:e todo-month.txt<CR>:tabnew<CR>:e todo-week.txt<CR>:tabnew<CR>:e todo.txt<CR>ggzM2jzO
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
