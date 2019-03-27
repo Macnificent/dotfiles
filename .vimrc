@@ -491,11 +491,13 @@ map <Leader><C-x> :call DecrementCounter()<CR><Esc>
 " Partial   = &
 " Skipped   = -
 " Postponed = >
+" Blocked   = !
 
 map <Leader>d :call ToggleDone()<CR><Esc>
 map <Leader>pa :call TogglePartial()<CR><Esc>
 map <Leader>sp :call ToggleSkipped()<CR><Esc>
 map <Leader>pd :call TogglePostponed()<CR><Esc>
+map <Leader>bl :call ToggleBlocked()<CR><Esc>
 map <Leader>to :call SetTodo()<CR><Esc>
 
 " Custom todo functions
@@ -548,5 +550,14 @@ function! TogglePostponed()
         s/\[.*\]/[]/ge
     else
         s/\[.*\]/[>]/ge
+    endif
+endfunction
+
+function! ToggleBlocked()
+    let blocked = matchstr(getline('.'), '\[!\]')
+    if !empty(blocked)
+        s/\[.*\]/[]/ge
+    else
+        s/\[.*\]/[!]/ge
     endif
 endfunction
