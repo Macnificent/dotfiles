@@ -475,9 +475,31 @@ endfunction
 nnoremap <C-n> :tabprevious<CR>
 nnoremap <C-m> :tabnext<CR>
 
+function! Insert(text)
+    " a simple function to insert text where the cursor is
+    execute "normal! \<Esc>a".a:text
+endfunction
+
+function! Strip(text)
+    return substitute(a:text, '^\_s*\(.\{-}\)\_s*$', '\1', '')
+endfunction
+
+
 " ========================================================
 " Mappings and functions to simplify note-taking and todos
 " ========================================================
+
+"command! InsertDate gg<CR>:call Insert(Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"')))
+"map <Leader>nx normal! gg<CR>:call Insert(Strip(system('date -date=''tomorrow'' +"%Y-%m-%d"')))<CR>
+
+command! Nextday :call InsertNextDay()
+
+function! InsertNextDay()
+    :normal! ggO
+    :call Insert("{".Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"'))."}")
+    :normal! 3o
+    :normal! ki
+endfunction
 
 " Quickly edit todos
 nnoremap <Leader>te :cd $TODODIR<CR>:e todo-month.txt<CR>:tabnew todo-week.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
