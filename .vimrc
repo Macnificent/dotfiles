@@ -494,8 +494,10 @@ command! Nextday :call InsertNextDay()
 function! InsertNextDay()
     :normal! ggO
     :call Insert("{".Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"'))."}")
-    :normal! 3o
-    :normal! ki
+    :normal! 2o
+    :normal! O
+    :call Insert("\t")
+    :startinsert
 endfunction
 
 " Quickly edit todos
