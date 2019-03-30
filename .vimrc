@@ -489,9 +489,6 @@ endfunction
 " Mappings and functions to simplify note-taking and todos
 " ========================================================
 
-"command! InsertDate gg<CR>:call Insert(Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"')))
-"map <Leader>nx normal! gg<CR>:call Insert(Strip(system('date -date=''tomorrow'' +"%Y-%m-%d"')))<CR>
-
 command! Nextday :call InsertNextDay()
 
 function! InsertNextDay()
