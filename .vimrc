@@ -492,10 +492,16 @@ endfunction
 command! Nextday :call InsertNextDay()
 
 function! InsertNextDay()
+    :1,/{.*}/-s/\[>\].*\n/\=setreg('A', submatch(0), 'V')/ne
     :normal! ggO
     :call Insert("{".Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"'))."}")
     :normal! 2o
     :normal! O
+    if !empty(getreg("a"))
+        :call Insert("\t")
+        :call Insert(getreg("a"))
+        :call setreg("a", "")
+    endif
     :call Insert("\t")
     :startinsert
 endfunction
