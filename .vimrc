@@ -406,8 +406,9 @@ nmap ,c :%s///gn
 set timeoutlen=1000 ttimeoutlen=0
 
 " Clear highlighting on escape in normal mode
-nnoremap <esc> :noh<return><esc>
-nnoremap <esc>^[ <esc>^[
+" nnoremap <esc> :noh<return><esc>
+nnoremap <esc> :let @/ = ""<cr>
+" nnoremap <esc>^[ <esc>^[
 
 " Show line numbers
 set number
@@ -484,6 +485,51 @@ function! Strip(text)
     return substitute(a:text, '^\_s*\(.\{-}\)\_s*$', '\1', '')
 endfunction
 
+" =======================
+" Goyo + Limelight config
+" =======================
+
+function! s:goyo_enter()
+  silent !tmux set status off
+  silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
+  set noshowmode
+  set noshowcmd
+  set scrolloff=999
+  "Limelight
+
+  let b:quitting = 0
+  let b:quitting_bang = 0
+  autocmd QuitPre <buffer> let b:quitting = 1
+  cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
+
+endfunction
+
+function! s:goyo_leave()
+  silent !tmux set status on
+  silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
+  set showmode
+  set showcmd
+  set scrolloff=5
+  "Limelight!
+
+    " Quit Vim if this is the only remaining buffer
+  if b:quitting && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+    if b:quitting_bang
+      qa!
+    else
+      qa
+    endif
+  endif
+
+endfunction
+
+autocmd! User GoyoEnter nested call <SID>goyo_enter()
+autocmd! User GoyoLeave nested call <SID>goyo_leave()
+
+let g:limelight_conceal_ctermfg = 'gray'
+let g:limelight_conceal_ctermfg = 240
+let g:goyo_height = '100%'
+let g:goyo_width = '80%'
 
 " ========================================================
 " Mappings and functions to simplify note-taking and todos
@@ -507,7 +553,7 @@ function! InsertNextDay()
 endfunction
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODODIR<CR>:e todo-month.txt<CR>:tabnew todo-week.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODODIR<CR>:e todo-unsched.txt<CR>:tabnew todo-month.txt<CR>:tabnew todo-week.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
