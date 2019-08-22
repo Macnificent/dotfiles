@@ -1,0 +1,2 @@
+﻿#Persistent
+Capslock::Send {ESC}
