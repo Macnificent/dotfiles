@@ -32,7 +32,9 @@
 " => General
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-execute pathogen#infect()
+if !has("gui_running")
+    execute pathogen#infect()
+endif
 
 " Disable bells
 set vb
