@@ -4,7 +4,8 @@
 set guifont=Consolas:h9
 set encoding=utf-8
 set vb t_vb=
-set guioptions -=m 
+set guioptions -=m "remove menu
+set go-=L "remove left-hand side scroll
 
 " Need to override env variable used in .vimrc
 let $TODODIR="D:\\notes\\todo"
