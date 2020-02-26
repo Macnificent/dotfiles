@@ -689,7 +689,7 @@ function! LoadIntentions()
     " Load default colors
     hi i_misc guibg=#fdf6e3 guifg=grey
     "call matchadd('i_misc', '&>')
-    call matchadd('i_misc', '^\s*&>')
+    call matchadd('i_misc', '^\s*&&>')
 
     " Load user-defined colors
     let all_intentions = ParseIntentions()    
@@ -699,12 +699,13 @@ function! LoadIntentions()
         let intention_fg  = intention[2]
         let hi_rule       = 'i' . intention_id
         
-        "let intention_ref_rule = '^\\s*' . intention_id . '>.*$'
-        let intention_ref_rule = '^\\s*' . intention_id . '>'
-        "let intention_ref_rule = intention_id . '>'
+        "let intention_match_line    = '^\\s*' . intention_id . '>.*$'
+        let intention_match_indent  = '^\\s*' . intention_id . '>'
+        let intention_match_literal = intention_id . '>'
 
         exe 'hi ' . hi_rule . ' guibg=' . intention_bg . ' guifg=' . intention_fg
-        exe 'call matchadd("' . hi_rule . '", "' . intention_ref_rule . '")'
+        exe 'call matchadd("' . hi_rule . '", "' . intention_match_indent . '")'
+        exe 'call matchadd("' . hi_rule . '", "' . intention_match_literal . '")'
     endfor
 endfunction
 
