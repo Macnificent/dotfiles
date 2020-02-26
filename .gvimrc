@@ -1,14 +1,9 @@
-"set guifont=Liberation_Mono_for_Powerline:h10 
-"set guifont=Roboto_Mono_for_Powerline:h10 
-"set guifont=Ubuntu_Mono_derivative_Powerline:h20
 set guifont=Consolas:h9
 set encoding=utf-8
 set vb t_vb=
 set guioptions -=m "remove menu
 set go-=L "remove left-hand side scroll
 
-" Need to override env variable used in .vimrc
-let $TODODIR="D:\\notes\\todo"
 if has("windows")
     "set shell=C:\Windows\Sysnative\wsl.exe
     "set shellpipe=|
@@ -38,3 +33,11 @@ function! ToggleFullscreen()
     :let g:fullscreen = !g:fullscreen
     :call libcallnr("gvimfullscreen.dll", "ToggleFullScreen", 0)
 endfunction
+
+set wildchar=<Tab> wildmenu wildmode=full
+set wildcharm=<C-Z>
+nnoremap <F10> :b <C-Z>
+
+" Intention/todo config
+let $TODO_DIR='D:\notes\todo'
+let $INTENTIONS_PATH=$TODO_DIR . '\intentions.txt'

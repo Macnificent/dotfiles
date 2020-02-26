@@ -31,8 +31,8 @@
 " => General
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-"if !has("gui_running")
     execute pathogen#infect()
+"if !has("gui_running")
 "endif
 
 " Disable bells
@@ -143,8 +143,9 @@ set foldcolumn=1
 " Enable syntax highlighting
 syntax enable
 
+
 set background=dark
-colorscheme gruvbox
+colorscheme flattened_light
 
 " Enable 256 colors palette in Gnome Terminal
 if $COLORTERM == 'gnome-terminal'
@@ -413,6 +414,7 @@ nnoremap <esc> :let @/ = ""<cr>
 
 " Show line numbers
 set number
+"set relativenumber
 
 " Remove vertical line in pane separator
 set fillchars+=vert:\
@@ -558,25 +560,29 @@ let g:goyo_width = '70%'
 " ========================================================
 
 command! Nextday :call InsertNextDay()
+map <Leader>nd :call InsertNextDay()<CR>
 
 function! InsertNextDay()
-    :1,/{.*}/-s/\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
     :normal! ggO
     ":call Insert("{".Strip(system('date "--date=tomorrow" "+%Y-%m-%d"'))."}")
     :call Insert("{".Strip(system('powershell "[DateTime]::Today.AddDays(1).ToString("""yyyy-MM-dd""")"'))."}")
     :normal! 2o
-    :normal! O
+    ":normal! O
     if !empty(getreg("a"))
         :call Insert("\t")
         :call Insert(getreg("a"))
         :call setreg("a", "")
     endif
-    :call Insert("\t")
-    :startinsert
+    ":call Insert("\t")
+    ":startinsert
 endfunction
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODODIR<CR>:e todo-unsched.txt<CR>:tabnew todo-month.txt<CR>:tabnew todo-week.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+
+" Always load intention highlight rules when opening todo-related files
+au BufReadPost,BufNewFile todo*.txt,intentions.txt call LoadIntentions()
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
@@ -663,8 +669,59 @@ function! ToggleBlocked()
     endif
 endfunction
 
+" Improved fold navigation
 nnoremap <silent> <leader>zj :call NextFold('j')<cr>
 nnoremap <silent> <leader>zk :call NextFold('k')<cr>
 function! NextFold(dir)
     exe 'norm!zcz' . a:dir . 'zo'
+endfunction
+
+" Color highlighting for intentions
+map <Leader>ll :call ReloadIntentions()<CR><Esc>
+
+function! ReloadIntentions()
+    call clearmatches()
+    call LoadIntentions()
+endfunction
+
+function! LoadIntentions()
+    
+    " Load default colors
+    hi i_misc guibg=#fdf6e3 guifg=grey
+    "call matchadd('i_misc', '&>')
+    call matchadd('i_misc', '^\s*&>')
+
+    " Load user-defined colors
+    let all_intentions = ParseIntentions()    
+    for intention in all_intentions
+        let intention_id  = intention[0]
+        let intention_bg  = intention[1]
+        let intention_fg  = intention[2]
+        let hi_rule       = 'i' . intention_id
+        
+        "let intention_ref_rule = '^\\s*' . intention_id . '>.*$'
+        let intention_ref_rule = '^\\s*' . intention_id . '>'
+        "let intention_ref_rule = intention_id . '>'
+
+        exe 'hi ' . hi_rule . ' guibg=' . intention_bg . ' guifg=' . intention_fg
+        exe 'call matchadd("' . hi_rule . '", "' . intention_ref_rule . '")'
+    endfor
+endfunction
+
+function! ParseIntentions()
+    let intentions_full_path = $TODO_DIR . '\intentions.txt'
+    let all_lines = readfile(intentions_full_path)
+    let all_intentions = []
+    for line in all_lines
+        " Example intention:
+        " 1>(#000000:#ffffff) Some description 
+        let matches = matchlist(line, '^\s*\(\d\+\)>\[\(.\{3,10}\):\(.\{3,10}\)\]\s*\(.\+\)$')
+        if !empty(matches)
+            let intention_id = matches[1]
+            let intention_bg = matches[2]
+            let intention_fg = matches[3]
+            call add(all_intentions, [intention_id, intention_bg, intention_fg])
+        endif
+    endfor
+    return all_intentions
 endfunction
