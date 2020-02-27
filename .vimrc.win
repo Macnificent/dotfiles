@@ -563,26 +563,38 @@ command! Nextday :call InsertNextDay()
 map <Leader>nd :call InsertNextDay()<CR>
 
 function! InsertNextDay()
-    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    " Grab postponed or blocked todos from the top of the current file
+    let postponed_todos = GetPostponedTodos()
+    let dailys = LoadDailyTodos()
+
+    " Insert header for tomorrow's date
     :normal! ggO
-    ":call Insert("{".Strip(system('date "--date=tomorrow" "+%Y-%m-%d"'))."}")
     :call Insert("{".Strip(system('powershell "[DateTime]::Today.AddDays(1).ToString("""yyyy-MM-dd""")"'))."}")
+    ":call Insert("{".Strip(system('date "--date=tomorrow" "+%Y-%m-%d"'))."}")
+    
     :normal! 2o
-    ":normal! O
-    if !empty(getreg("a"))
+    for daily in dailys
+        :call Insert(daily . "\n")
+    endfor
+    
+    if !empty(postponed_todos)
         :call Insert("\t")
-        :call Insert(getreg("a"))
-        :call setreg("a", "")
+        :call Insert(postponed_todos . "\n")
     endif
-    ":call Insert("\t")
-    ":startinsert
+endfunction
+
+function! GetPostponedTodos()
+    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    let postponed_todos = getreg("a")
+    :call setreg("a", "")
+    return postponed_todos
 endfunction
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew daily.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
 
 " Always load intention highlight rules when opening todo-related files
-au BufReadPost,BufNewFile todo*.txt,intentions.txt call LoadIntentions()
+au BufReadPost,BufNewFile todo*.txt,daily.txt,intentions.txt call LoadIntentions()
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
@@ -725,4 +737,17 @@ function! ParseIntentions()
         endif
     endfor
     return all_intentions
+endfunction
+
+function! LoadDailyTodos()
+    let daily_full_path = $TODO_DIR . '\daily.txt'
+    let all_lines = readfile(daily_full_path)
+    let all_dailys = []
+    for line in all_lines
+        let match = matchstr(line, '\%(\S\+>\)*\[.*\].\+$')
+        if !empty(match)
+            call add(all_dailys, line)
+        endif
+    endfor
+    return all_dailys
 endfunction
