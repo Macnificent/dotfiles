@@ -565,7 +565,7 @@ map <Leader>nd :call InsertNextDay()<CR>
 function! InsertNextDay()
     " Grab postponed or blocked todos from the top of the current file
     let postponed_todos = GetPostponedTodos()
-    let dailys = LoadDailyTodos()
+    let repeats = LoadRepeatTodos()
 
     " Insert header for tomorrow's date
     :normal! ggO
@@ -573,8 +573,9 @@ function! InsertNextDay()
     ":call Insert("{".Strip(system('date "--date=tomorrow" "+%Y-%m-%d"'))."}")
     
     :normal! 2o
-    for daily in dailys
-        :call Insert(daily . "\n")
+    for repeat in repeats
+        :call Insert("\t")
+        :call Insert(repeat[0] . "[] " . repeat[2] . "\n")
     endfor
     
     if !empty(postponed_todos)
@@ -591,10 +592,10 @@ function! GetPostponedTodos()
 endfunction
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew daily.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew repeat.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
 
 " Always load intention highlight rules when opening todo-related files
-au BufReadPost,BufNewFile todo*.txt,daily.txt,intentions.txt call LoadIntentions()
+au BufReadPost,BufNewFile todo*.txt,repeat.txt,intentions.txt call LoadIntentions()
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
@@ -698,10 +699,13 @@ endfunction
 
 function! LoadIntentions()
     
-    " Load default colors
+    " Misc todo items
     hi i_misc guibg=#fdf6e3 guifg=grey
-    "call matchadd('i_misc', '&>')
     call matchadd('i_misc', '^\s*&&>')
+
+    " Priorities
+    hi prio guifg=red
+    call matchadd('prio', '<PRIO>')
 
     " Load user-defined colors
     let all_intentions = ParseIntentions()    
@@ -739,15 +743,42 @@ function! ParseIntentions()
     return all_intentions
 endfunction
 
-function! LoadDailyTodos()
-    let daily_full_path = $TODO_DIR . '\daily.txt'
-    let all_lines = readfile(daily_full_path)
-    let all_dailys = []
+function! LoadRepeatTodos()
+    let repeat_full_path = $TODO_DIR . '\repeat.txt'
+    let all_lines = readfile(repeat_full_path)
+    let all_repeats = []
     for line in all_lines
-        let match = matchstr(line, '\%(\S\+>\)*\[.*\].\+$')
-        if !empty(match)
-            call add(all_dailys, line)
+        let matches = matchlist(line, '^\s*\(\%(\d\+>\)*\)\[\(\d\{1,7}\)*\]\s*\(.\+\)$')
+        if !empty(matches)
+            let intention_id = matches[1]
+            let repeat_pattern = matches[2]
+            let text = matches[3]
+
+            let days_of_week = []
+            let repeat_tomorrow = 0
+
+            if empty(repeat_pattern)
+                let days_of_week = [1,2,3,4,5,6,7]    
+                let repeat_tomorrow = 1
+            else
+                let weekday = strftime("%w")
+                let tomorrow = (weekday + 1)
+                if tomorrow > 7
+                    let tomorrow = tomorrow % 7
+                endif
+                for day_of_week in split(repeat_pattern, '\zs')
+                    call add(days_of_week, day_of_week)
+                    if day_of_week == tomorrow
+                        let repeat_tomorrow = 1
+                    endif
+                endfor
+            endif
+
+            let repeat = [intention_id, days_of_week, text]
+            if repeat_tomorrow == 1
+                call add(all_repeats, repeat)
+            endif
         endif
     endfor
-    return all_dailys
+    return all_repeats
 endfunction
