@@ -122,7 +122,7 @@ function prepend() { echo -e "$1$(cat $2)" > $2; }
 # Custom aliases
 alias mount_pcloud='sudo mount -t drvfs p: /mnt/p' 
 alias conf='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
-alias week="date +%U"
+alias week="date +%V"
 
 # Exports
 export -f prepend
