@@ -564,7 +564,7 @@ map <Leader>nd :call InsertNextDay()<CR>
 
 function! InsertNextDay()
     " Grab postponed or blocked todos from the top of the current file
-    let postponed_todos = GetPostponedTodos()
+    let rollover_todos = GetRolloverTodos()
     let repeats = LoadRepeatTodos()
 
     " Insert header for tomorrow's date
@@ -578,17 +578,17 @@ function! InsertNextDay()
         :call Insert(repeat[0] . "[] " . repeat[2] . "\n")
     endfor
     
-    if !empty(postponed_todos)
+    if !empty(rollover_todos)
         :call Insert("\t")
-        :call Insert(postponed_todos . "\n")
+        :call Insert(rollover_todos)
     endif
 endfunction
 
-function! GetPostponedTodos()
-    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
-    let postponed_todos = getreg("a")
+function! GetRolloverTodos()
+    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\|&\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    let rollover_todos = getreg("a")
     :call setreg("a", "")
-    return postponed_todos
+    return rollover_todos
 endfunction
 
 " Quickly edit todos
@@ -615,6 +615,39 @@ map <Leader>pd :call TogglePostponed()<CR><Esc>
 map <Leader>bl :call ToggleBlocked()<CR><Esc>
 map <Leader>to :call SetTodo()<CR><Esc>
 
+function! ToggleTodoStatus(match_pattern, match_replace)
+    let status_match = matchstr(getline('.'), '\[' . a:match_pattern . '\]')
+    if empty(status_match)
+        exec 's/\[.*\]/[' . a:match_replace . ']/ge'
+    else
+        call SetTodo()
+    endif
+endfunction
+
+function! SetTodo()
+    s/\[.*\]/[]/ge
+endfunction
+
+function! ToggleDone()
+    call ToggleTodoStatus('/', '\/')
+endfunction
+
+function! TogglePartial()
+    call ToggleTodoStatus('&', '\&')
+endfunction
+
+function! ToggleSkipped()
+    call ToggleTodoStatus('-', '-')
+endfunction
+
+function! TogglePostponed()
+    call ToggleTodoStatus('>', '>')
+endfunction
+
+function! ToggleBlocked()
+    call ToggleTodoStatus('!', '!')
+endfunction
+
 " Custom todo functions
 function! IncrementCounter()
     mark `
@@ -626,60 +659,6 @@ function! DecrementCounter()
     mark `
     s/\[\(\d\+\)\(.*\)\]/\="\[".(submatch(1)-1).submatch(2)."\]"/ge
     normal ``
-endfunction
-
-function! SetTodo()
-    let any = matchstr(getline('.'), '\[.*\]')
-    if !empty(any)
-        s/\[.*\]/[]/ge
-    else
-        exe 'norm!I[] ' 
-    endif
-endfunction
-
-function! ToggleDone()
-    let done = matchstr(getline('.'), '\[/\]')
-    if !empty(done)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[\/]/ge
-    endif
-endfunction
-
-function! TogglePartial()
-    let partial = matchstr(getline('.'), '\[&\]')
-    if !empty(partial)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[\&]/ge
-    endif
-endfunction
-
-function! ToggleSkipped()
-    let skipped = matchstr(getline('.'), '\[-\]')
-    if !empty(skipped)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[-]/ge
-    endif
-endfunction
-
-function! TogglePostponed()
-    let postponed = matchstr(getline('.'), '\[>\]')
-    if !empty(postponed)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[>]/ge
-    endif
-endfunction
-
-function! ToggleBlocked()
-    let blocked = matchstr(getline('.'), '\[!\]')
-    if !empty(blocked)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[!]/ge
-    endif
 endfunction
 
 " Improved fold navigation
