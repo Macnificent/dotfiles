@@ -1,4 +1,3 @@
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Maintainer:
 "       Amir Salihefendic — @amix3k
@@ -32,9 +31,9 @@
 " => General
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-if !has("gui_running")
     execute pathogen#infect()
-endif
+"if !has("gui_running")
+"endif
 
 " Disable bells
 set vb
@@ -144,8 +143,9 @@ set foldcolumn=1
 " Enable syntax highlighting
 syntax enable
 
+
 set background=dark
-colorscheme gruvbox
+colorscheme flattened_light
 
 " Enable 256 colors palette in Gnome Terminal
 if $COLORTERM == 'gnome-terminal'
@@ -414,6 +414,7 @@ nnoremap <esc> :let @/ = ""<cr>
 
 " Show line numbers
 set number
+"set relativenumber
 
 " Remove vertical line in pane separator
 set fillchars+=vert:\
@@ -427,16 +428,33 @@ noremap <silent>ö :NERDTreeToggle<CR>
 let NERDTreeShowHidden=1
 
 " Airline
-let g:airline_powerline_fonts = 1
-let g:airline_theme = 'gruvbox'
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#show_buffers = 0
-let g:airline#extensions#tabline#show_splits = 0
-let g:airline#extensions#tabline#show_tabs = 1
-let g:airline#extensions#tabline#show_tab_nr = 0
-let g:airline#extensions#tabline#show_tab_type = 0
-let g:airline#extensions#tabline#close_symbol = '×'
-let g:airline#extensions#tabline#show_close_button = 0
+if !exists('g:airline_symbols')
+let g:airline_symbols = {}
+endif
+
+" unicode symbols
+let g:airline_left_sep = '»'
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
+let g:airline_right_sep = '◀'
+let g:airline_symbols.linenr = '␊'
+let g:airline_symbols.linenr = '␤'
+let g:airline_symbols.linenr = '¶'
+let g:airline_symbols.branch = '⎇'
+let g:airline_symbols.paste = 'ρ'
+let g:airline_symbols.paste = 'Þ'
+let g:airline_symbols.paste = '∥'
+let g:airline_symbols.whitespace = 'Ξ'
+"let g:airline_powerline_fonts = 1
+"let g:airline_theme = 'gruvbox'
+"let g:airline#extensions#tabline#enabled = 1
+"let g:airline#extensions#tabline#show_buffers = 0
+"let g:airline#extensions#tabline#show_splits = 0
+"let g:airline#extensions#tabline#show_tabs = 1
+"let g:airline#extensions#tabline#show_tab_nr = 0
+"let g:airline#extensions#tabline#show_tab_type = 0
+"let g:airline#extensions#tabline#close_symbol = '×'
+"let g:airline#extensions#tabline#show_close_button = 0
 
 " Improve paren highlighting (https://stackoverflow.com/a/10746829)
 hi MatchParen cterm=bold ctermbg=none ctermfg=magenta
@@ -477,6 +495,10 @@ endfunction
 " Simpler tab navigation
 nnoremap <C-n> :tabprevious<CR>
 nnoremap <C-m> :tabnext<CR>
+
+" Add new line without entering insert mode
+nmap <S-Enter> O<Esc>
+nmap <C-Enter> o<Esc>
 
 function! Insert(text)
     " a simple function to insert text where the cursor is
@@ -531,31 +553,70 @@ autocmd! User GoyoLeave nested call <SID>goyo_leave()
 let g:limelight_conceal_ctermfg = 'gray'
 let g:limelight_conceal_ctermfg = 240
 let g:goyo_height = '100%'
-let g:goyo_width = '80%'
+let g:goyo_width = '70%'
 
 " ========================================================
 " Mappings and functions to simplify note-taking and todos
 " ========================================================
 
 command! Nextday :call InsertNextDay()
+map <Leader>nd :call InsertNextDay()<CR>
+map <Leader>td :call InsertToday()<CR>
+
+function! InsertToday()
+    " Grab postponed or blocked todos from the top of the current file
+    let rollover_todos = GetRolloverTodos()
+    let repeats = LoadRepeatTodos(0)
+
+    :normal! ggO
+    :call Insert("{".Strip(system('powershell "[DateTime]::Today.ToString("""yyyy-MM-dd""")"'))."}")
+    
+    :normal! 2o
+    for repeat in repeats
+        :call Insert("\t")
+        :call Insert(repeat[0] . "[] " . repeat[2] . "\n")
+    endfor
+    
+    if !empty(rollover_todos)
+        :call Insert("\t")
+        :call Insert(rollover_todos)
+    endif
+endfunction
 
 function! InsertNextDay()
-    :1,/{.*}/-s/\[\(>\|!\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    " Grab postponed or blocked todos from the top of the current file
+    let rollover_todos = GetRolloverTodos()
+    let repeats = LoadRepeatTodos(1)
+
+    " Insert header for tomorrow's date
     :normal! ggO
-    :call Insert("{".Strip(system('date --date=''tomorrow'' +"%Y-%m-%d"'))."}")
+    :call Insert("{".Strip(system('powershell "[DateTime]::Today.AddDays(1).ToString("""yyyy-MM-dd""")"'))."}")
+    ":call Insert("{".Strip(system('date "--date=tomorrow" "+%Y-%m-%d"'))."}")
+    
     :normal! 2o
-    :normal! O
-    if !empty(getreg("a"))
+    for repeat in repeats
         :call Insert("\t")
-        :call Insert(getreg("a"))
-        :call setreg("a", "")
+        :call Insert(repeat[0] . "[] " . repeat[2] . "\n")
+    endfor
+    
+    if !empty(rollover_todos)
+        :call Insert("\t")
+        :call Insert(rollover_todos)
     endif
-    :call Insert("\t")
-    :startinsert
+endfunction
+
+function! GetRolloverTodos()
+    :1,/{.*}/-s/\%(\S\+>\)*\[\(>\|!\|&\)\].*\n/\=setreg('A', submatch(0), 'V')/ne
+    let rollover_todos = getreg("a")
+    :call setreg("a", "")
+    return rollover_todos
 endfunction
 
 " Quickly edit todos
-nnoremap <Leader>te :cd $TODODIR<CR>:e todo-unsched.txt<CR>:tabnew todo-month.txt<CR>:tabnew todo-week.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+nnoremap <Leader>te :cd $TODO_DIR<CR>:e intentions.txt<CR>:tabnew repeat.txt<CR>:tabnew todo-unsched.txt<CR>:tabnew todo.txt<CR>ggzM2jzO
+
+" Always load intention highlight rules when opening todo-related files
+au BufReadPost,BufNewFile todo*.txt,repeat.txt,intentions.txt call LoadIntentions()
 
 " Quickly incr and decr counters, regardless of cursor position
 map <Leader><C-a> :call IncrementCounter()<CR><Esc>
@@ -575,6 +636,44 @@ map <Leader>pd :call TogglePostponed()<CR><Esc>
 map <Leader>bl :call ToggleBlocked()<CR><Esc>
 map <Leader>to :call SetTodo()<CR><Esc>
 
+function! ToggleTodoStatus(match_pattern, match_replace)
+    let status_match = matchstr(getline('.'), '\[' . a:match_pattern . '\]')
+    if empty(status_match)
+        exec 's/\[.*\]/[' . a:match_replace . ']/ge'
+    else
+        call SetTodo()
+    endif
+endfunction
+
+function! SetTodo()
+    let any = matchstr(getline('.'), '\[.*\]')
+    if !empty(any)
+        s/\[.*\]/[]/ge
+    else
+        exe 'norm!I[] ' 
+    endif
+endfunction
+
+function! ToggleDone()
+    call ToggleTodoStatus('/', '\/')
+endfunction
+
+function! TogglePartial()
+    call ToggleTodoStatus('&', '\&')
+endfunction
+
+function! ToggleSkipped()
+    call ToggleTodoStatus('-', '-')
+endfunction
+
+function! TogglePostponed()
+    call ToggleTodoStatus('>', '>')
+endfunction
+
+function! ToggleBlocked()
+    call ToggleTodoStatus('!', '!')
+endfunction
+
 " Custom todo functions
 function! IncrementCounter()
     mark `
@@ -588,51 +687,103 @@ function! DecrementCounter()
     normal ``
 endfunction
 
-function! SetTodo()
-    s/\[.*\]/[]/ge
+" Improved fold navigation
+nnoremap <silent> <leader>zj :call NextFold('j')<cr>
+nnoremap <silent> <leader>zk :call NextFold('k')<cr>
+function! NextFold(dir)
+    exe 'norm!zcz' . a:dir . 'zo'
 endfunction
 
-function! ToggleDone()
-    let done = matchstr(getline('.'), '\[/\]')
-    if !empty(done)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[\/]/ge
-    endif
+" Color highlighting for intentions
+map <Leader>ll :call ReloadIntentions()<CR><Esc>
+
+function! ReloadIntentions()
+    call clearmatches()
+    call LoadIntentions()
 endfunction
 
-function! TogglePartial()
-    let partial = matchstr(getline('.'), '\[&\]')
-    if !empty(partial)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[\&]/ge
-    endif
+function! LoadIntentions()
+    
+    " Misc todo items
+    hi i_misc guibg=#fdf6e3 guifg=grey
+    call matchadd('i_misc', '^\s*&&>')
+
+    " Priorities
+    hi prio guifg=red
+    call matchadd('prio', '<PRIO>')
+
+    " Load user-defined colors
+    let all_intentions = ParseIntentions()    
+    for intention in all_intentions
+        let intention_id  = intention[0]
+        let intention_bg  = intention[1]
+        let intention_fg  = intention[2]
+        let hi_rule       = 'i' . intention_id
+        
+        "let intention_match_line    = '^\\s*' . intention_id . '>.*$'
+        let intention_match_indent  = '^\\s*' . intention_id . '>'
+        let intention_match_literal = intention_id . '>'
+
+        exe 'hi ' . hi_rule . ' guibg=' . intention_bg . ' guifg=' . intention_fg
+        exe 'call matchadd("' . hi_rule . '", "' . intention_match_indent . '")'
+        exe 'call matchadd("' . hi_rule . '", "' . intention_match_literal . '")'
+    endfor
 endfunction
 
-function! ToggleSkipped()
-    let skipped = matchstr(getline('.'), '\[-\]')
-    if !empty(skipped)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[-]/ge
-    endif
+function! ParseIntentions()
+    let intentions_full_path = $TODO_DIR . '\intentions.txt'
+    let all_lines = readfile(intentions_full_path)
+    let all_intentions = []
+    for line in all_lines
+        " Example intention:
+        " 1>(#000000:#ffffff) Some description 
+        let matches = matchlist(line, '^\s*\(\d\+\)>\[\(.\{3,10}\):\(.\{3,10}\)\]\s*\(.\+\)$')
+        if !empty(matches)
+            let intention_id = matches[1]
+            let intention_bg = matches[2]
+            let intention_fg = matches[3]
+            call add(all_intentions, [intention_id, intention_bg, intention_fg])
+        endif
+    endfor
+    return all_intentions
 endfunction
 
-function! TogglePostponed()
-    let postponed = matchstr(getline('.'), '\[>\]')
-    if !empty(postponed)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[>]/ge
-    endif
-endfunction
+function! LoadRepeatTodos(day_offset)
+    let repeat_full_path = $TODO_DIR . '\repeat.txt'
+    let all_lines = readfile(repeat_full_path)
+    let all_repeats = []
+    for line in all_lines
+        let matches = matchlist(line, '^\s*\(\%(.\+>\)*\)\[\(\d\{1,7}\)*\]\s*\(.\+\)$')
+        if !empty(matches)
+            let intention_id = matches[1]
+            let repeat_pattern = matches[2]
+            let text = matches[3]
 
-function! ToggleBlocked()
-    let blocked = matchstr(getline('.'), '\[!\]')
-    if !empty(blocked)
-        s/\[.*\]/[]/ge
-    else
-        s/\[.*\]/[!]/ge
-    endif
+            let days_of_week = []
+            let should_repeat = 0
+
+            if empty(repeat_pattern)
+                let days_of_week = [1,2,3,4,5,6,7]    
+                let should_repeat = 1
+            else
+                let weekday = strftime("%w")
+                let repeat_day = (weekday + a:day_offset)
+                if repeat_day > 7
+                    let repeat_day = repeat_day % 7
+                endif
+                for day_of_week in split(repeat_pattern, '\zs')
+                    call add(days_of_week, day_of_week)
+                    if day_of_week == repeat_day
+                        let should_repeat = 1
+                    endif
+                endfor
+            endif
+
+            let repeat = [intention_id, days_of_week, text]
+            if should_repeat == 1
+                call add(all_repeats, repeat)
+            endif
+        endif
+    endfor
+    return all_repeats
 endfunction
